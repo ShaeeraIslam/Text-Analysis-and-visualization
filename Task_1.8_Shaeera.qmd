@@ -1,0 +1,332 @@
+---
+title: '**Title of the Report**:'
+jupyter:
+  jupytext:
+    formats: ipynb,auto:percent,qmd,pdf
+  kernelspec:
+    display_name: Python [conda env:base] *
+    language: python
+    name: python3
+---
+
+# Task 1.8HD : Data Cleansing and Text Analysis Challenge
+` Name : Shaeera Islam`
+` Student Number : 225071971`
+` Email Address : s225071971@deakin.edu.au`
+` Unit Code: SIT731(Postgraduate)`
+
+
+# **Introduction:**
+
+>In this task, we were to choose a StackExchange site dealing with topic I found interesting to visualize in different ways and use Quarto file to generate a report. The StackExchange site that was choosen here is **Computational Science** or provided as SciComp.StackExchange. We downloaded the public data dump file which were in XML and turned them to CSV format for further workings. 
+
+# Tasks:
+
+# 1.
+ First we, convert the xml files to csv using the function we wrote called 'xml_to_csv' and store them and load them into dataframes.
+
+```{python}
+import xml.etree.ElementTree as ET
+import pandas as pd
+
+def xml_to_csv(xml_file, csv_file):
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    all_records = []
+    for elem in root.findall('row'):
+        all_records.append(elem.attrib)
+
+    df = pd.DataFrame(all_records)
+    df.to_csv(csv_file, index=False)
+
+```
+
+```{python}
+#| lines_to_next_cell: 2
+xml_to_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Posts.xml", "D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Posts.csv")
+xml_to_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Users.xml", "D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Users.csv")
+xml_to_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Badges.xml", "D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Badges.csv")
+xml_to_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Comments.xml", "D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Comments.csv")
+xml_to_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Votes.xml", "D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Votes.csv")
+xml_to_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Tags.xml", "D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Tags.csv")
+xml_to_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/PostHistory.xml", "D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/PostHistory.csv")
+xml_to_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/PostLinks.xml", "D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/PostLinks.csv")
+```
+
+```{python}
+posts = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Posts.csv", low_memory=False)
+users = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Users.csv", low_memory=False)
+tags = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Badges.csv", low_memory=False)
+comments = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Comments.csv", low_memory=False)
+votes = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Votes.csv", low_memory=False)
+tags = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Tags.csv", low_memory=False)
+comments = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/PostHistory.csv", low_memory=False)
+votes = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/PostLinks.csv", low_memory=False)
+```
+
+## Visualization 1:
+This is a visualization of Word Cloud of most mommon tags. The word cloud plot visually highlights which scientific topics are most discussed. Tags like paraview, 3d, parallel - computing is dominating here. This reflects user interests.
+
+```{python}
+#| lines_to_next_cell: 2
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+
+tag_freq = tags.groupby('TagName').size().sort_values(ascending=False)
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(tag_freq)
+
+plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.title("Most Common Tags on SciComp.StackExchange")
+plt.show()
+```
+
+## Visualization 2:
+A visualization of word cloud of the keywords or hashtags from AboutMe. This highlights how users self-describe in their Bios. This shows popularity of terms like "Software", "Python", or "University".
+
+```{python}
+#| lines_to_next_cell: 2
+import re
+from collections import Counter
+
+# regex for capitalized words and hashtags from AboutMe
+text_blob = " ".join(users['AboutMe'].fillna("").tolist())
+words = re.findall(r'#\w+|\b[A-Z][a-z]{2,}\b', text_blob)
+
+word_counts = Counter(words)
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(word_counts)
+
+# Plot
+plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.title("Keyword/Hashtag Cloud from User Bios")
+plt.show()
+```
+
+## Visualization 3:
+This is the visualization of number of posts monthly on SciComp.StackExchange. The decline trend reveals how less active the community has been over time, with spikes possibly indicating academic semesters.
+
+```{python}
+import matplotlib.pyplot as plt
+
+posts = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Posts.csv")
+
+posts['CreationDate'] = posts['CreationDate'].astype(str)
+
+# regex to extract year-month in the form "2022-04"
+posts['YearMonth'] = posts['CreationDate'].str.extract(r'(\d{4}-\d{2})')
+
+# 
+posts = posts.dropna(subset=['YearMonth'])
+
+# Count posts per month
+monthly_counts = posts['YearMonth'].value_counts().sort_index()
+
+# Plot
+monthly_counts.plot(kind='line', marker='o', figsize=(12, 6), title="Monthly Posts (via Regex Date Extraction)")
+plt.xlabel("Year-Month")
+plt.ylabel("Number of Posts")
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+```
+
+## Visualization 4:
+A visualization to showcase the number of badges in different categories. This badges's patterns is showcased using regex and reveals what kinds of contributions users are rewarded for.
+
+```{python}
+badges = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Badges.csv")
+
+# Extracting badge categories via regex like badges with 'Editor', 'Comment', 'Question' etc.
+patterns = {
+    'Editor': r'\bedit',
+    'Comment': r'\bcomment',
+    'Question': r'\bquestion',
+    'Answer': r'\banswer',
+    'Tag-related': r'\btag\b|\bwiki\b',
+    'Vote': r'\bvote',
+    'Participation': r'\bparticipation|\bvisited|\byear',
+    'Other': r'.*'  # fallback
+}
+
+
+pattern_counts = {k: 0 for k in patterns}
+
+# Count of badge name matches by category
+for name in badges['Name'].dropna():
+    matched = False
+    for label, regex in patterns.items():
+        if re.search(regex, name, flags=re.IGNORECASE):
+            pattern_counts[label] += 1
+            matched = True
+            break
+    if not matched:
+        pattern_counts['Other'] += 1
+
+# plot
+pd.Series(pattern_counts).sort_values().plot(kind='barh', color='teal', figsize=(10, 6), title="Badge Categories via Regex")
+plt.xlabel("Number of Badges")
+plt.tight_layout()
+plt.show()
+```
+
+## Visualization 5:
+This visualization is of the world map of users by Location using regex. We used regex to extract country-like names from the Location field in Users.csv, then map them using plotly. We can see from the plot that SciComp users are globally distributed, but concentrations likely align with English speaking countries and tech hubs.
+
+```{python}
+import plotly.express as px
+
+users = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Users.csv")
+users['Location'] = users['Location'].fillna("")
+
+#regex for country location
+def extract_country(location):
+    match = re.search(r'\b[A-Z][a-z]+(?: [A-Z][a-z]+)?\b', location)
+    return match.group(0) if match else None
+
+users['Country'] = users['Location'].apply(extract_country)
+country_counts = users['Country'].value_counts().reset_index()
+country_counts.columns = ['Country', 'Count']
+
+fig = px.choropleth(country_counts, locations='Country',
+                    locationmode='country names',
+                    color='Count',
+                    color_continuous_scale='OrRd',
+                    title="User Distribution by Country (from Location Text)")
+fig.show()
+
+```
+
+## Visualization 6:
+A visualization of the number of users signing up per year.
+
+```{python}
+users['CreationDate'] = pd.to_datetime(users['CreationDate'], errors='coerce')
+users['Year'] = users['CreationDate'].dt.year
+
+users['Year'].value_counts().sort_index().plot(kind='line', marker='o', title="User Sign-Ups Per Year")
+plt.ylabel("Number of Users")
+plt.xlabel("Year")
+plt.grid(True)
+plt.show()
+```
+
+## Visualization 7:
+A heatmap of technology mentioned by users in their Bios. Users often mentioned Python with Java and Javascript, suggesting strong use of scientific computing libraries.
+
+```{python}
+import seaborn as sns
+from itertools import combinations
+
+# tech terms to search for
+tech_terms = ['Python', 'R', 'JavaScript', 'C++', 'C#', 'SQL', 'Java', 'HTML', 'CSS', 'React', 'Node', 'Angular', 'Excel', 'Pandas', 'NumPy']
+
+# Prepare bios
+users['AboutMe'] = users['AboutMe'].fillna("")
+bios = users['AboutMe'].str.lower()
+
+# binary presence dataframe with regex
+tech_presence = pd.DataFrame({tech: bios.str.contains(fr'\b{re.escape(tech.lower())}\b', regex=True) for tech in tech_terms})
+
+# Count co-occurrences
+co_occurrence = pd.DataFrame(0, index=tech_terms, columns=tech_terms)
+for i, row in tech_presence.iterrows():
+    present = row[row].index.tolist()
+    for tech1, tech2 in combinations(present, 2):
+        co_occurrence.at[tech1, tech2] += 1
+        co_occurrence.at[tech2, tech1] += 1
+
+# Heatmap
+plt.figure(figsize=(12, 10))
+sns.heatmap(co_occurrence, annot=True, cmap='YlGnBu', fmt='d', linewidths=.5, square=True)
+plt.title("Heatmap of Technology Co-Mentions in User Bios", fontsize=16)
+plt.xticks(rotation=45)
+plt.yticks(rotation=0)
+plt.tight_layout()
+plt.show()
+```
+
+## Visualization 8:
+The visualisation identifies patterns matching emails and URLs. It highlights professionalism, personal branding, or contact sharing. A notable proportion of users mention emails or URLs, indicating a tendency toward professional networking or showcasing personal projects.
+
+```{python}
+import seaborn as sns
+
+users = pd.read_csv("D:/Deakin Coursework/T1 semester/SIT - 731 -Data Wrangling/Task 1.8HD/Users.csv")
+users['AboutMe'] = users['AboutMe'].fillna("")
+
+# Email and URL Mention Detection in AboutMe using regex
+users['HasEmail'] = users['AboutMe'].str.contains(r'\b[\w\.-]+@[\w\.-]+\.\w{2,4}\b', flags=re.IGNORECASE)
+users['HasURL'] = users['AboutMe'].str.contains(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+])+', flags=re.IGNORECASE)
+
+email_url_counts = users[['HasEmail', 'HasURL']].sum().rename(index={'HasEmail': 'Email Mentioned', 'HasURL': 'URL Mentioned'})
+email_url_counts = email_url_counts.reset_index()
+email_url_counts.columns = ['Mention Type', 'User Count']
+
+# Donut-style chart for email and URL mentions
+fig, ax = plt.subplots(figsize=(6, 6))
+wedges, texts, autotexts = ax.pie(email_url_counts['User Count'], labels=email_url_counts['Mention Type'],
+                                  autopct='%1.1f%%', startangle=90, pctdistance=0.85)
+
+
+centre_circle = plt.Circle((0, 0), 0.70, fc='white')
+fig.gca().add_artist(centre_circle)
+plt.title('Email and URL Mentions in AboutMe')
+plt.tight_layout()
+plt.show()
+
+
+```
+
+## Visualization 9:
+The visualization is on years mention in Bio regarding events or experience. This captures temporal references like "Since 2015" to analyze longevity or relevance of experience. Spikes in year mentions may correspond to notable industry events such as 2020 pandemic or to indicate how long users have been involved in technical fields.
+
+```{python}
+all_bio_text = " ".join(users['AboutMe'].fillna("").tolist())
+years_mentioned = re.findall(r'\b(?:19|20)\d{2}\b', all_bio_text)
+year_counts = Counter(years_mentioned)
+
+# Prepare and plot as a line chart
+df_years = pd.DataFrame(year_counts.items(), columns=['Year', 'Count']).sort_values('Year')
+df_years['Year'] = df_years['Year'].astype(int)
+
+plt.figure(figsize=(10, 5))
+sns.lineplot(data=df_years, x='Year', y='Count', marker='o', color='teal')
+plt.title("Years Mentioned in User Bios (Experience, Events)")
+plt.xlabel("Year")
+plt.ylabel("Mention Count")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+def contains_gpu_cuda(text):
+    return bool(re.search(r'\b(gpu|cuda)\b', str(text).lower()))
+
+posts['MentionsGPU'] = posts['Body'].apply(contains_gpu_cuda)
+mentions_gpu = posts['MentionsGPU'].mean()
+
+print(f"Percentage of posts mentioning GPU or CUDA: {mentions_gpu:.2%}")
+```
+
+A strong focus on high-performance computing exists here, shown by frequent mentions of “GPU”, “CUDA”.
+
+# **Potential Data Privacy and Ethics Issue:**
+
+Some of the potential privacy and ethics issues may include :
+ - Location data is user-provided and can be sensitive. Although its generalized, it could have the potential of misuse.
+ - Even though users may not use real names, their self-disclosed bios and locations can unintentionally reveal identifying information. For example, combining a city with specific career details could potentially deanonymize a user.
+ - Analyzing personal statements in the AboutMe field raises concerns about inferred attributes, such as personality, nationality, or sentiment. Although they are statistical data, the wrong profiling may occur.
+ - Even anonymized metadata like badges, tags can lead to de-anonymization.
+ - The ethics of public dataset usage requires careful handling even when data is open.
+ - Though data is public, users did not specifically consent to be part of sentiment or location analyses.
+
+# **Conclusion:**
+
+> This analysis of the public data dump of computational science stack exchange forum uncovered meaningful patterns in user-generated text and metadata while maintaining user anonymity. By aggregating data and avoiding any personally identifiable or sensitive conclusions we could upheld ethical considerations. 
+
