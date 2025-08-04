@@ -11,7 +11,7 @@ jupyter:
 
 # Task 1.8HD : Data Cleansing and Text Analysis Challenge
 ` Name : Shaeera Islam`
-` Email Address : s225071971@deakin.edu.au`
+
 
 
 # **Introduction:**
@@ -327,5 +327,6 @@ Some of the potential privacy and ethics issues may include :
 # **Conclusion:**
 
 > This analysis of the public data dump of computational science stack exchange forum uncovered meaningful patterns in user-generated text and metadata while maintaining user anonymity. By aggregating data and avoiding any personally identifiable or sensitive conclusions we could upheld ethical considerations. 
+
 
 
